@@ -252,8 +252,8 @@
 |244| [What is NoopZone?](#what-is-noopzone)|
 |245| [How do you create displayBlock components?](#how-do-you-create-displayblock-components)|
 |246| [What are the possible data change scenarios for change detection?](#what-are-the-possible-data-change-scenarios-for-change-detection)|
-|247| [?](#)|
-|248| [?](#)|
+|247| [What is a zone context?](#what-is-a-zone-context)|
+|248| [What are the lifecycle hooks of a zone?](#what-are-the-lifecycle-hooks-of-a-zone)|
 |249| [?](#)|
 |250| [?](#)|
 |251| [?](#)|
@@ -3644,11 +3644,51 @@
 
      **[⬆ Back to Top](#table-of-contents)**
 
-247. ### ?
-
+247. ### What is a zone context?
+      Execution Context is an abstract concept that holds information about the environment within the current code being executed. A zone provides an execution context that persists across asynchronous operations is called as zone context. For example, the zone context will be same in both outside and inside setTimeout callback function,
+      ```js
+      zone.run(() => {
+        // outside zone
+        expect(zoneThis).toBe(zone);
+        setTimeout(function() {
+          // the same outside zone exist here
+          expect(zoneThis).toBe(zone);
+        });
+      });
+      ```
+      The current zone is retrieved through `Zone.current`.
      **[⬆ Back to Top](#table-of-contents)**
 
-248. ### ?
+248. ### What are the lifecycle hooks of a zone?
+     There are four lifecycle hooks for asynchronous operations from zone.js.
+     1. **onScheduleTask:** This hook triggers when a new asynchronous task is scheduled. For example, when you call setTimeout()
+     ```js
+     onScheduleTask: function(delegate, curr, target, task) {
+         console.log('new task is scheduled:', task.type, task.source);
+         return delegate.scheduleTask(target, task);
+       }
+     ```
+     2. **onInvokeTask:** This hook triggers when an asynchronous task is about to execute. For example, when the callback of setTimeout() is about to execute.
+     ```js
+     onInvokeTask: function(delegate, curr, target, task, applyThis, applyArgs) {
+         console.log('task will be invoked:', task.type, task.source);
+         return delegate.invokeTask(target, task, applyThis, applyArgs);
+       }
+     ```
+     3. **onHasTask:** This hook triggers when the status of one kind of task inside a zone changes from stable(no tasks in the zone) to unstable(a new task is scheduled in the zone) or from unstable to stable.
+     ```js
+       onHasTask: function(delegate, curr, target, hasTaskState) {
+         console.log('task state changed in the zone:', hasTaskState);
+         return delegate.hasTask(target, hasTaskState);
+       }
+     ```
+     4. **onInvoke:** This hook triggers when a synchronous function is going to execute in the zone.
+     ```js
+     onInvoke: function(delegate, curr, target, callback, applyThis, applyArgs) {
+         console.log('the callback will be invoked:', callback);
+         return delegate.invoke(target, callback, applyThis, applyArgs);
+       }
+     ```
 
      **[⬆ Back to Top](#table-of-contents)**
 
